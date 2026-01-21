@@ -26,12 +26,13 @@ class FraudCheckerDetail(BaseModel):
     checker_type: FraudCheckerType
     image: Image | None = None
     fraud_detected: bool
-    confidence_score: float
+    fraud_rating: float
     reason: str
+    result_weight: float
 
 
 class FraudDetectionResult(BaseModel):
     intervention_id: uuid.UUID
     fraud_detected: bool
-    confidence_score: float
+    fraud_rating: float
     details: list[FraudCheckerDetail]
