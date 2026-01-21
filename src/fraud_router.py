@@ -2,21 +2,14 @@ import asyncio
 
 from fastapi import APIRouter
 
-from src.checkers.basic_api_checker import BasicApiChecker
-from src.checkers.basic_text_checker import BasicTextChecker
+from src.checkers.base import BaseChecker
 from src.schema import (
     FraudCheckerDetail,
-    FraudCheckerType,
     FraudDetectionResult,
     Intervention,
 )
 
 router = APIRouter(prefix="/fraud", tags=["fraud-detection"])
-
-checkers = [
-    BasicTextChecker(type=FraudCheckerType.TEXT),
-    BasicApiChecker(type=FraudCheckerType.IMAGE, result_weight=4.0),
-]
 
 
 def calculate_fraud_score(results: list[FraudCheckerDetail]) -> tuple[bool, float]:
@@ -28,7 +21,9 @@ def calculate_fraud_score(results: list[FraudCheckerDetail]) -> tuple[bool, floa
     return fraud_detected, average_score
 
 
-async def run_checkers(intervention: Intervention) -> FraudDetectionResult:
+async def run_checkers(
+    checkers: list[BaseChecker], intervention: Intervention
+) -> FraudDetectionResult:
     tasks = []
     for checker in checkers:
         task = checker.check(intervention)

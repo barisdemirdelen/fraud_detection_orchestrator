@@ -80,36 +80,39 @@ The system is designed for easy extension through:
 The entry point of the application, responsible for:
 
 - Application initialization and configuration
+- Checker registry and configuration
 - Router registration
 - Server startup and lifecycle management
-
-```python
-def get_app():
-    app = FastAPI(title="Rapid Intervention Fraud Detection")
-    app.include_router(fraud_router)
-    return app
-```
-
-**Design Decision**: Factory pattern for app creation allows for easy testing and configuration management.
-
-### 2. Fraud Router (fraud_router.py)
-
-The orchestration layer that:
-
-- Defines API endpoints
-- Manages checker registry
-- Coordinates checker execution
-- Aggregates results
 
 ```python
 checkers = [
     BasicTextChecker(type=FraudCheckerType.TEXT),
     BasicApiChecker(type=FraudCheckerType.IMAGE, result_weight=4.0),
 ]
+
+
+def get_app():
+    app = FastAPI(title="Rapid Intervention Fraud Detection")
+    app.include_router(fraud_router)
+    return app
 ```
 
-**Design Decision**: Static checker registration keeps the system simple while allowing for easy modification. Future
-enhancement could use dependency injection for dynamic registration.
+**Design Decision**: Centralizing checker registration in main.py provides better separation of concerns and makes the
+system easier to configure. Factory pattern for app creation allows for easy testing and configuration management.
+
+### 2. Fraud Router (fraud_router.py)
+
+The orchestration layer that:
+
+- Defines API endpoints
+- Coordinates checker execution
+- Aggregates results
+
+The router now receives checkers as a parameter, separating concerns between configuration (main.py) and execution (
+fraud_router.py).
+
+**Design Decision**: Moving checker registration to main.py improves separation of concerns and makes the router more
+focused on its core responsibility of orchestrating fraud detection.
 
 ### 3. Data Models (schema.py)
 
@@ -164,13 +167,14 @@ HTTP Request → FastAPI → Pydantic Validation → Router Handler
 ### 2. Checker Execution
 
 ```
-Router → Checker Registry → Async Orchestrator → Individual Checkers
+Main.py (Checker Registry) → Router → Async Orchestrator → Individual Checkers
 ```
 
-1. Router retrieves all registered checkers
-2. Creates async tasks for each checker
-3. Executes all checkers concurrently using `asyncio.gather()`
-4. Collects results from all checkers
+1. Main.py defines and configures all checkers
+2. Router receives checkers as parameters from the application context
+3. Creates async tasks for each checker
+4. Executes all checkers concurrently using `asyncio.gather()`
+5. Collects results from all checkers
 
 ### 3. Result Aggregation
 
@@ -243,10 +247,10 @@ Future enhancement could implement dynamic checker registration:
 class CheckerRegistry:
     def __init__(self):
         self.checkers = []
-    
+
     def register(self, checker: BaseChecker):
         self.checkers.append(checker)
-    
+
     def get_checkers(self) -> list[BaseChecker]:
         return self.checkers
 ```

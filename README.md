@@ -34,7 +34,7 @@ architecture where different fraud checkers can be easily added, removed, or mod
 
 ```
 src/
-├── main.py              # FastAPI application entry point
+├── main.py              # FastAPI application entry point and checker registry
 ├── fraud_router.py      # API router with fraud detection endpoint
 ├── schema.py            # Pydantic models for request/response
 └── checkers/            # Fraud checker plugins
@@ -46,7 +46,7 @@ src/
 ### Data Flow
 
 1. **Request**: Client sends intervention data to `/fraud/detect`
-2. **Orchestration**: System runs all registered checkers concurrently
+2. **Orchestration**: System retrieves checkers from main.py and runs them concurrently
 3. **Aggregation**: Results are collected and scored using weighted average
 4. **Response**: Combined fraud detection result is returned
 
@@ -178,7 +178,7 @@ class MyCustomChecker(BaseChecker):
 
 ### Step 2: Register the Checker
 
-Add your checker to the `checkers` list in `src/fraud_router.py`:
+Add your checker to the `checkers` list in `src/main.py`:
 
 ```python
 from src.checkers.my_custom_checker import MyCustomChecker

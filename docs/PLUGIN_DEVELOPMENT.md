@@ -38,7 +38,7 @@ class MyChecker(BaseChecker):
 
 ### 2. Register Your Checker
 
-Add it to the checkers list in `src/fraud_router.py`:
+Add it to the checkers list in `src/main.py`:
 
 ```python
 from src.checkers.my_checker import MyChecker
