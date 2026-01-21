@@ -97,10 +97,24 @@ def get_app():
     return app
 ```
 
-**Design Decision**: Centralizing checker registration in main.py provides better separation of concerns and makes the
-system easier to configure. Factory pattern for app creation allows for easy testing and configuration management.
+**Design Decision**: Factory pattern for app creation allows for easy testing and configuration management. Checker
+configuration is separated into its own module (checker_config.py) to avoid circular imports.
 
-### 2. Fraud Router (fraud_router.py)
+### 2. Checker Configuration (checker_config.py)
+
+Centralized configuration for all fraud checkers:
+
+```python
+checkers = [
+    BasicTextChecker(type=FraudCheckerType.TEXT),
+    BasicApiChecker(type=FraudCheckerType.IMAGE, result_weight=4.0),
+]
+```
+
+**Design Decision**: Separating checker configuration into its own module prevents circular imports between main.py and
+fraud_router.py while keeping configuration centralized and easy to modify.
+
+### 3. Fraud Router (fraud_router.py)
 
 The orchestration layer that:
 
@@ -167,11 +181,11 @@ HTTP Request → FastAPI → Pydantic Validation → Router Handler
 ### 2. Checker Execution
 
 ```
-Main.py (Checker Registry) → Router → Async Orchestrator → Individual Checkers
+Checker Config (checker_config.py) → Router → Async Orchestrator → Individual Checkers
 ```
 
-1. Main.py defines and configures all checkers
-2. Router receives checkers as parameters from the application context
+1. Checker configuration module defines and configures all checkers
+2. Router imports checkers from the configuration module
 3. Creates async tasks for each checker
 4. Executes all checkers concurrently using `asyncio.gather()`
 5. Collects results from all checkers

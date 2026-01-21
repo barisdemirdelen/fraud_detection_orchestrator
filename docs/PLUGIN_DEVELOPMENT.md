@@ -38,7 +38,7 @@ class MyChecker(BaseChecker):
 
 ### 2. Register Your Checker
 
-Add it to the checkers list in `src/main.py`:
+Add it to the checkers list in `src/checker_config.py`:
 
 ```python
 from src.checkers.my_checker import MyChecker
@@ -201,7 +201,7 @@ class KeywordChecker(BaseChecker):
             result_weight=self.result_weight,
         )
 
-# Usage in fraud_router.py:
+# Usage in checker_config.py:
 # KeywordChecker(
 #     type=FraudCheckerType.TEXT,
 #     suspicious_keywords=["urgent", "emergency", "immediate", "crisis"],
@@ -839,7 +839,7 @@ class ResourceManagedChecker(BaseChecker):
         pass
 
 
-# Usage in fraud_router.py:
+# Usage in checker_config.py:
 async def run_checkers(intervention: Intervention) -> FraudDetectionResult:
     tasks = []
 

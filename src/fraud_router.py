@@ -2,6 +2,7 @@ import asyncio
 
 from fastapi import APIRouter
 
+from src.checker_config import checkers
 from src.checkers.base import BaseChecker
 from src.schema import (
     FraudCheckerDetail,
@@ -43,4 +44,4 @@ async def run_checkers(
 
 @router.post("/detect")
 async def detect_fraud(intervention: Intervention) -> FraudDetectionResult:
-    return await run_checkers(intervention)
+    return await run_checkers(checkers, intervention)
