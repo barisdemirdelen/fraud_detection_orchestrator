@@ -32,13 +32,21 @@ async def run_checkers(
 
     results = await asyncio.gather(*tasks)
 
-    fraud_detected, fraud_rating = calculate_fraud_score(results)
+    # Flatten results - some checkers return single FraudCheckerDetail, others return lists
+    flattened_results = []
+    for result in results:
+        if isinstance(result, list):
+            flattened_results.extend(result)
+        else:
+            flattened_results.append(result)
+
+    fraud_detected, fraud_rating = calculate_fraud_score(flattened_results)
 
     return FraudDetectionResult(
         intervention_id=intervention.id,
         fraud_detected=fraud_detected,
         fraud_rating=fraud_rating,
-        details=results,
+        details=flattened_results,
     )
 
 

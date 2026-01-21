@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Proof of concept api orchestrator"
 requires-python = ">=3.13"
 dependencies = [
+    "aiohttp>=3.13.3",
     "asyncio>=4.0.0",
     "fastapi>=0.128.0",
     "uvicorn>=0.30.0",
