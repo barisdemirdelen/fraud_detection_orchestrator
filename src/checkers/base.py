@@ -26,6 +26,7 @@ class BaseChecker(ABC):
             reason = "No issues found."
 
         return FraudCheckerDetail(
+            checker_name=type(self).__name__,
             checker_type=self.type,
             fraud_detected=fraud_detected,
             fraud_rating=fraud_rating,

@@ -23,6 +23,7 @@ class FraudCheckerType(Enum):
 
 
 class FraudCheckerDetail(BaseModel):
+    checker_name: str
     checker_type: FraudCheckerType
     image: Image | None = None
     fraud_detected: bool

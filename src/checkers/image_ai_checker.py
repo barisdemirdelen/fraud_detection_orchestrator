@@ -4,7 +4,7 @@ from src.checkers.base import BaseChecker
 from src.schema import FraudCheckerDetail, Intervention
 
 
-class ImageAnalyzerApiChecker(BaseChecker):
+class ImageAiChecker(BaseChecker):
     api_endpoint: str
 
     def __init__(self, api_endpoint: str, **kwargs):
@@ -26,70 +26,65 @@ class ImageAnalyzerApiChecker(BaseChecker):
                             continue
                         image_data = await image_response.read()
 
-                    # Create form data with the image as binary
+                    # Create form data with the image as binary (API expects "file" field)
                     data = aiohttp.FormData()
                     data.add_field(
                         "file",
                         image_data,
-                        filename=f"image_{image.id}",
+                        filename=f"image_{image.id}.jpg",
                         content_type="image/jpeg",
                     )
 
-                    # Send to API endpoint
+                    # Send to API endpoint with form data
                     async with session.post(self.api_endpoint, data=data) as response:
                         if response.status == 200:
                             result_data = await response.json()
 
-                            # Extract fraud detection info from API response
-                            overall_score = result_data.get("overall_fraud_score", 0.0)
-                            ai_detection = result_data.get("ai_detection", {})
-                            summary = result_data.get("summary", {})
+                            # Extract fraud detection info from new API response format
+                            is_ai_generated = result_data.get("is_ai_generated", False)
+                            confidence_score = result_data.get("confidence_score", 0.0)
+                            analysis_details = result_data.get("analysis_details", {})
 
-                            # Determine if fraud is detected based on score and AI detection
-                            is_ai_generated = ai_detection.get("is_ai_generated", False)
-                            confidence_score = ai_detection.get("confidence_score", 0.0)
+                            # Consider it fraud if AI generated
+                            fraud_detected = is_ai_generated
 
-                            # Consider it fraud if AI generated or high overall score
-                            fraud_detected = is_ai_generated or overall_score > 0.7
-
-                            # Build detailed reason from analysis
-                            primary_concerns = summary.get("primary_concerns", [])
-                            risk_level = (
-                                "high"
-                                if summary.get("high_risk")
-                                else "medium"
-                                if summary.get("medium_risk")
-                                else "low"
-                            )
-
+                            # Build reason from analysis
                             if is_ai_generated:
                                 reason = f"AI generated image detected (confidence: {confidence_score:.2f})"
-                                if primary_concerns:
-                                    reason += f". Primary concerns: {', '.join(primary_concerns)}"
-                            elif overall_score > 0.5:
-                                reason = f"Suspicious image detected (score: {overall_score:.2f}, risk: {risk_level})"
-                                if primary_concerns:
-                                    reason += (
-                                        f". Concerns: {', '.join(primary_concerns)}"
+                                if analysis_details:
+                                    # Include any additional details if available
+                                    details_str = ", ".join(
+                                        f"{k}: {v}"
+                                        for k, v in analysis_details.items()
+                                        if v
                                     )
+                                    if details_str:
+                                        reason += f". Additional details: {details_str}"
                             else:
-                                reason = f"Image analysis completed (score: {overall_score:.2f}, risk: {risk_level})"
+                                reason = f"No AI generation detected (confidence: {confidence_score:.2f})"
 
                             results.append(
                                 self.create_result(
                                     fraud_detected=fraud_detected,
-                                    fraud_rating=overall_score,
+                                    fraud_rating=confidence_score,
                                     reason=reason,
                                     image=image,
                                 )
                             )
                         else:
+                            # Log the error response for debugging
+                            try:
+                                error_text = await response.text()
+                                print(f"API Error {response.status}: {error_text}")
+                            except Exception as e:
+                                print(f"API returned status {response.status} {e}")
+
                             results.append(
                                 self.create_result(
                                     fraud_detected=False,
                                     fraud_rating=0.0,
                                     image=image,
-                                    reason="Api not available pr returned an error.",
+                                    reason=f"API error: {response.status}",
                                 )
                             )
                             continue
