@@ -27,12 +27,10 @@ from src.schema import FraudCheckerDetail, FraudCheckerType, Intervention
 class MyChecker(BaseChecker):
     async def check(self, intervention: Intervention) -> FraudCheckerDetail:
         # Your fraud detection logic here
-        return FraudCheckerDetail(
-            checker_type=self.type,
+        return self.create_result(
             fraud_detected=False,  # Your logic result
             fraud_rating=0.0,  # Score between 0.0 and 1.0
-            reason="Explanation of the check result",
-            result_weight=self.result_weight,
+            reason="Explanation of the check result"
         )
 ```
 
@@ -193,12 +191,10 @@ class KeywordChecker(BaseChecker):
         else:
             reason = "No suspicious keywords detected"
 
-        return FraudCheckerDetail(
-            checker_type=self.type,
+        return self.create_result(
             fraud_detected=fraud_detected,
             fraud_rating=fraud_rating,
-            reason=reason,
-            result_weight=self.result_weight,
+            reason=reason
         )
 
 # Usage in checker_config.py:
@@ -268,12 +264,10 @@ class SentimentAPIChecker(BaseChecker):
             fraud_rating = 0.0
             reason = f"Sentiment analysis failed: {str(e)}"
 
-        return FraudCheckerDetail(
-            checker_type=self.type,
+        return self.create_result(
             fraud_detected=fraud_detected,
             fraud_rating=fraud_rating,
-            reason=reason,
-            result_weight=self.result_weight,
+            reason=reason
         )
 ```
 
@@ -348,12 +342,10 @@ class MLClassifierChecker(BaseChecker):
             fraud_rating = 0.0
             reason = f"ML classifier failed: {str(e)}"
 
-        return FraudCheckerDetail(
-            checker_type=self.type,
+        return self.create_result(
             fraud_detected=fraud_detected,
             fraud_rating=fraud_rating,
-            reason=reason,
-            result_weight=self.result_weight,
+            reason=reason
         )
 ```
 
@@ -376,12 +368,10 @@ class ImageMetadataChecker(BaseChecker):
 
     async def check(self, intervention: Intervention) -> FraudCheckerDetail:
         if not intervention.images:
-            return FraudCheckerDetail(
-                checker_type=self.type,
+            return self.create_result(
                 fraud_detected=False,
                 fraud_rating=0.0,
-                reason="No images to analyze",
-                result_weight=self.result_weight,
+                reason="No images to analyze"
             )
 
         suspicious_count = 0
@@ -405,12 +395,10 @@ class ImageMetadataChecker(BaseChecker):
         else:
             reason = f"All {total_images} images passed metadata validation"
 
-        return FraudCheckerDetail(
-            checker_type=self.type,
+        return self.create_result(
             fraud_detected=fraud_detected,
             fraud_rating=fraud_rating,
-            reason=reason,
-            result_weight=self.result_weight,
+            reason=reason
         )
 
     async def _check_single_image(self, image: Image) -> list[str]:
@@ -465,7 +453,24 @@ class ImageMetadataChecker(BaseChecker):
 
 ## Best Practices
 
-### 1. Error Handling
+### 1. Use the create_result Helper Method
+
+The `BaseChecker` class provides a `create_result` helper method that simplifies creating `FraudCheckerDetail` objects:
+
+```python
+# Recommended - using create_result
+return self.create_result(
+    fraud_detected=True,
+    fraud_rating=0.8,
+    reason="Suspicious pattern detected"
+)
+
+```
+
+This helper method automatically sets the `checker_type` and `result_weight` from your checker instance, reducing code
+duplication and potential errors.
+
+### 2. Error Handling
 
 Always handle exceptions gracefully:
 
@@ -484,12 +489,10 @@ async def check(self, intervention: Intervention) -> FraudCheckerDetail:
 
 
 def _create_error_result(self, error_message: str) -> FraudCheckerDetail:
-    return FraudCheckerDetail(
-        checker_type=self.type,
+    return self.create_result(
         fraud_detected=False,  # Default to no fraud on error
         fraud_rating=0.0,
-        reason=error_message,
-        result_weight=self.result_weight,
+        reason=error_message
     )
 ```
 

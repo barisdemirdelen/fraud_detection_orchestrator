@@ -12,3 +12,14 @@ class BaseChecker(ABC):
 
     @abc.abstractmethod
     async def check(self, intervention: Intervention) -> FraudCheckerDetail: ...
+
+    def create_result(
+        self, fraud_detected: bool, fraud_rating: float, reason: str
+    ) -> FraudCheckerDetail:
+        return FraudCheckerDetail(
+            checker_type=self.type,
+            fraud_detected=fraud_detected,
+            fraud_rating=fraud_rating,
+            reason=reason,
+            result_weight=self.result_weight,
+        )
