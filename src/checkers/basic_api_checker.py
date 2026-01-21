@@ -9,6 +9,4 @@ class BasicApiChecker(BaseChecker):
         # Simulate an api call
         await asyncio.sleep(0.5)
 
-        return self.create_result(
-            fraud_detected=False, fraud_rating=0.4, reason="Api returned no issues."
-        )
+        return self.create_result(fraud_detected=False, fraud_rating=0.4)

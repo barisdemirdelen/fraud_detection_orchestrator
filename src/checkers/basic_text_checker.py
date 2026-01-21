@@ -14,5 +14,4 @@ class BasicTextChecker(BaseChecker):
         return self.create_result(
             fraud_detected=False,
             fraud_rating=0.0,
-            reason="No issues found in text content.",
         )

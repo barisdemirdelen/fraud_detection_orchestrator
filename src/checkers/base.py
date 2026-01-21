@@ -14,8 +14,11 @@ class BaseChecker(ABC):
     async def check(self, intervention: Intervention) -> FraudCheckerDetail: ...
 
     def create_result(
-        self, fraud_detected: bool, fraud_rating: float, reason: str
+        self, fraud_detected: bool, fraud_rating: float, reason: str | None = None
     ) -> FraudCheckerDetail:
+        if reason is None:
+            reason = "No issues found."
+
         return FraudCheckerDetail(
             checker_type=self.type,
             fraud_detected=fraud_detected,
